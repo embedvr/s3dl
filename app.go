@@ -21,6 +21,7 @@ func main() {
 	accessKey := flag.String("accessKey", "", "AWS Access Key")
 	secretKey := flag.String("secretKey", "", "AWS Secret Key")
 	outFolder := flag.String("o", "", "Output Folder")
+	skipExisting := flag.Bool("skipExisting", false, "Skip existing files")
 	flag.Parse()
 
 	if *accessKey == "" || *secretKey == "" {
@@ -83,7 +84,14 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for obj := range objectChannel {
-				localFile, err := os.Create(path.Join(*outFolder, *obj.Key))
+				filePath := path.Join(*outFolder, *obj.Key)
+				if *skipExisting {
+					if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+						log.Printf("Skipping %s", *obj.Key)
+						continue
+					}
+				}
+				localFile, err := os.Create(filePath)
 				if err != nil {
 					log.Fatal(err)
 				}
