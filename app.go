@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,6 +20,7 @@ func main() {
 
 	accessKey := flag.String("accessKey", "", "AWS Access Key")
 	secretKey := flag.String("secretKey", "", "AWS Secret Key")
+	outFolder := flag.String("o", "", "Output Folder")
 	flag.Parse()
 
 	if *accessKey == "" || *secretKey == "" {
@@ -81,7 +83,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for obj := range objectChannel {
-				localFile, err := os.Create(*obj.Key)
+				localFile, err := os.Create(path.Join(*outFolder, *obj.Key))
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -103,4 +105,6 @@ func main() {
 	}
 
 	wg.Wait()
+
+	log.Println("Done!")
 }
